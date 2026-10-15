@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>cutoffpredictor.site | MHT-CET Percentile Calculator</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f7f2ef;
+      color: #111;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    header {
+      height: 78px;
+      background: #111;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      z-index: 10;
+    }
+    .logo {
+      font-size: 25px;
+      font-weight: 800;
+      letter-spacing: -0.8px;
+    }
+    .logo span { color: #e89563; }
+    .hero {
+      min-height: calc(100vh - 78px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 50px 20px;
+      position: relative;
+    }
+    .badge {
+      background: #eadbd3;
+      color: #75452d;
+      padding: 8px 16px;
+      border-radius: 50px;
+      font-size: 12px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      margin-bottom: 20px;
+    }
+    .hero h1 {
+      font-size: clamp(38px, 6vw, 68px);
+      letter-spacing: -3px;
+      line-height: 1;
+      margin-bottom: 16px;
+    }
+    .hero h1 span { color: #d87943; }
+    .hero > p {
+      color: #666;
+      max-width: 550px;
+      line-height: 1.6;
+      margin-bottom: 30px;
+      font-size: 15px;
+    }
+    .calculator {
+      width: min(100%, 480px);
+      background: white;
+      border: 1px solid #e6ded9;
+      border-radius: 24px;
+      padding: 26px;
+      box-shadow: 0 20px 60px rgba(60, 35, 20, 0.1);
+      text-align: left;
+      position: relative;
+      z-index: 2;
+    }
+    .section-title {
+      font-size: 13px;
+      font-weight: bold;
+      margin-bottom: 8px;
+      color: #333;
+    }
+    .group-selector, .selector {
+      display: grid;
+      gap: 8px;
+      background: #f3efec;
+      padding: 5px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+    .group-selector { grid-template-columns: 1fr 1fr; }
+    .selector { grid-template-columns: repeat(3, 1fr); }
+    .group-selector button, .selector button {
+      border: none;
+      background: transparent;
+      padding: 11px 5px;
+      border-radius: 9px;
+      cursor: pointer;
+      font-weight: bold;
+      color: #777;
+      transition: 0.2s;
+    }
+    .group-selector button.active, .selector button.active {
+      background: #111;
+      color: white;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+    .input-box {
+      height: 56px;
+      border: 2px solid #e3dbd6;
+      border-radius: 13px;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      margin-bottom: 15px;
+    }
+    .input-box:focus-within {
+      border-color: #d87943;
+      box-shadow: 0 0 0 4px rgba(216,121,67,0.1);
+    }
+    .input-box input {
+      width: 100%;
+      height: 100%;
+      border: none;
+      outline: none;
+      font-size: 20px;
+      font-weight: bold;
+      background: transparent;
+    }
+    .input-box span { color: #999; font-weight: bold; }
+    .calculate-btn {
+      width: 100%;
+      height: 54px;
+      border: none;
+      border-radius: 13px;
+      background: #d87943;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.25s;
+    }
+    .calculate-btn:hover {
+      background: #c36632;
+      transform: translateY(-2px);
+    }
+    #error {
+      color: #d13d3d;
+      font-size: 13px;
+      text-align: center;
+      min-height: 18px;
+      margin-top: 10px;
+    }
+    .result {
+      display: none;
+      margin-top: 20px;
+      padding: 22px;
+      border-radius: 18px;
+      background: #f7f2ef;
+      text-align: center;
+    }
+    .result.show { display: block; }
+    .result-label { color: #777; font-size: 13px; margin-bottom: 4px; }
+    .result h2 { font-size: 46px; letter-spacing: -2px; margin-bottom: 4px; color: #111; }
+    #result-text { color: #666; font-size: 13px; margin-bottom: 16px; }
+    .progress-container {
+      height: 8px;
+      background: #ddd4ce;
+      border-radius: 20px;
+      overflow: hidden;
+      margin-bottom: 18px;
+    }
+    .progress-bar {
+      width: 0;
+      height: 100%;
+      background: #d87943;
+      border-radius: 20px;
+      transition: width 0.8s ease;
+    }
+    .result-info {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .result-info div {
+      background: white;
+      padding: 10px 4px;
+      border-radius: 10px;
+    }
+    .result-info small { display: block; color: #999; font-size: 10px; margin-bottom: 4px; }
+    .result-info strong { font-size: 13px; }
+    .reset-btn {
+      display: block;
+      margin: 14px auto 0;
+      border: none;
+      background: transparent;
+      color: #777;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .info {
+      background: #111;
+      color: white;
+      padding: 60px 7%;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    .info-card {
+      padding: 25px;
+      border: 1px solid #333;
+      border-radius: 18px;
+    }
+    .icon {
+      width: 36px;
+      height: 36px;
+      background: #e89563;
+      color: #111;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+    .info-card h3 { margin-bottom: 8px; font-size: 16px; }
+    .info-card p { color: #aaa; font-size: 13px; line-height: 1.5; }
+    footer {
+      background: #111;
+      border-top: 1px solid #222;
+      color: #777;
+      padding: 20px 7%;
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+    }
+    @media (max-width: 700px) {
+      .hero { padding: 40px 16px; }
+      .calculator { padding: 18px; }
+      .info { grid-template-columns: 1fr; padding: 40px 16px; }
+      footer { flex-direction: column; gap: 8px; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">cutoffpredictor<span>.site</span></div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="badge">MHT-CET 2026</div>
+      <h1>Marks <span>→</span> Percentile</h1>
+      <p>Enter your MHT-CET marks, select your difficulty level, and get an estimated percentile instantly.</p>
+
+      <div class="calculator">
+        <div class="section-title">Select Group</div>
+        <div class="group-selector">
+          <button class="group active" onclick="selectGroup('PCM', this)">PCM</button>
+          <button class="group" onclick="selectGroup('PCB', this)">PCB</button>
+        </div>
+
+        <div class="section-title">Select Difficulty Level</div>
+        <div class="selector">
+          <button class="difficulty active" onclick="selectDifficulty('Easy', this)">Easy</button>
+          <button class="difficulty" onclick="selectDifficulty('Medium', this)">Medium</button>
+          <button class="difficulty" onclick="selectDifficulty('Hard', this)">Hard</button>
+        </div>
+
+        <div class="section-title">Enter your marks</div>
+        <div class="input-box">
+          <input type="number" id="marks" placeholder="e.g. 145" min="0" max="200">
+          <span>/ 200</span>
+        </div>
+
+        <button class="calculate-btn" onclick="calculatePercentile()">Calculate Percentile →</button>
+        <p id="error"></p>
+
+        <div class="result" id="result">
+          <p class="result-label">Estimated Percentile</p>
+          <h2 id="percentile">--</h2>
+          <p id="result-text"></p>
+          <div class="progress-container">
+            <div class="progress-bar" id="progress"></div>
+          </div>
+          <div class="result-info">
+            <div>
+              <small>Marks</small>
+              <strong id="result-marks">--</strong>
+            </div>
+            <div>
+              <small>Group</small>
+              <strong id="result-group">PCM</strong>
+            </div>
+            <div>
+              <small>Difficulty</small>
+              <strong id="result-difficulty">Easy</strong>
+            </div>
+          </div>
+        </div>
+
+        <button class="reset-btn" onclick="resetCalculator()">Reset</button>
+      </div>
+    </section>
+
+    <section class="info">
+      <div class="info-card">
+        <div class="icon">01</div>
+        <h3>Enter Marks</h3>
+        <p>Enter your MHT-CET raw score out of 200.</p>
+      </div>
+      <div class="info-card">
+        <div class="icon">02</div>
+        <h3>Select Difficulty</h3>
+        <p>Choose Easy, Medium, or Hard based on your shift difficulty.</p>
+      </div>
+      <div class="info-card">
+        <div class="icon">03</div>
+        <h3>Get Percentile</h3>
+        <p>Get a dynamic estimated percentile calculated on normalization trends.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>© 2026 cutoffpredictor.site</p>
+    <p>Percentile shown is an estimate based on trends.</p>
+  </footer>
+
+  <script>
+    let selectedGroup = "PCM";
+    let selectedDifficulty = "Easy";
+
+    function selectGroup(group, button) {
+      selectedGroup = group;
+      document.querySelectorAll(".group").forEach(item => item.classList.remove("active"));
+      button.classList.add("active");
+      document.getElementById("result").classList.remove("show");
+      document.getElementById("error").textContent = "";
+    }
+
+    function selectDifficulty(difficulty, button) {
+      selectedDifficulty = difficulty;
+      document.querySelectorAll(".difficulty").forEach(item => item.classList.remove("active"));
+      button.classList.add("active");
+      document.getElementById("result").classList.remove("show");
+    }
+
+    // Dynamic Normalization Table (Linear Interpolation)
+    const benchmarks = [
+      { marks: 200, pcm: 100.00, pcb: 100.00 },
+      { marks: 180, pcm: 99.85,  pcb: 99.90 },
+      { marks: 160, pcm: 99.10,  pcb: 99.25 },
+      { marks: 140, pcm: 97.60,  pcb: 97.90 },
+      { marks: 120, pcm: 95.20,  pcb: 95.50 },
+      { marks: 100, pcm: 90.50,  pcb: 91.00 },
+      { marks: 80,  pcm: 82.00,  pcb: 83.00 },
+      { marks: 60,  pcm: 68.00,  pcb: 70.00 },
+      { marks: 40,  pcm: 48.00,  pcb: 50.00 },
+      { marks: 20,  pcm: 24.00,  pcb: 26.00 },
+      { marks: 0,   pcm: 0.00,   pcb: 0.00 }
+    ];
+
+    function calculatePercentile() {
+      const marksInput = document.getElementById("marks");
+      const marks = Number(marksInput.value);
+      const error = document.getElementById("error");
+      const result = document.getElementById("result");
+
+      if (marksInput.value.trim() === "") {
+        error.textContent = "Please enter your marks.";
+        result.classList.remove("show");
+        return;
+      }
+
+      if (isNaN(marks) || marks < 0 || marks > 200) {
+        error.textContent = "Marks must be between 0 and 200.";
+        result.classList.remove("show");
+        return;
+      }
+
+      error.textContent = "";
+
+      // Linear Interpolation Calculation
+      let calculatedPercentile = 0;
+      for (let i = 0; i < benchmarks.length - 1; i++) {
+        const high = benchmarks[i];
+        const low = benchmarks[i + 1];
+
+        if (marks <= high.marks && marks >= low.marks) {
+          const key = selectedGroup.toLowerCase();
+          const marksRatio = (marks - low.marks) / (high.marks - low.marks);
+          calculatedPercentile = low[key] + marksRatio * (high[key] - low[key]);
+          break;
+        }
+      }
+
+      // Difficulty shift adjustments
+      if (selectedDifficulty === "Easy") {
+        calculatedPercentile -= (calculatedPercentile > 90 ? 0.35 : 1.2);
+      } else if (selectedDifficulty === "Hard") {
+        calculatedPercentile += (calculatedPercentile > 90 ? 0.45 : 1.5);
+      }
+
+      // Range Clamp
+      if (calculatedPercentile > 100) calculatedPercentile = 100;
+      if (calculatedPercentile < 0) calculatedPercentile = 0;
+
+      // Update UI
+      document.getElementById("percentile").textContent = calculatedPercentile.toFixed(2);
+      document.getElementById("result-marks").textContent = marks + " / 200";
+      document.getElementById("result-group").textContent = selectedGroup;
+      document.getElementById("result-difficulty").textContent = selectedDifficulty;
+      document.getElementById("result-text").textContent = "Estimated " + selectedGroup + " percentile (" + selectedDifficulty + " Shift)";
+      
+      result.classList.add("show");
+      
+      setTimeout(function() {
+        document.getElementById("progress").style.width = calculatedPercentile + "%";
+      }, 50);
+    }
+
+    function resetCalculator() {
+      document.getElementById("marks").value = "";
+      document.getElementById("error").textContent = "";
+      document.getElementById("result").classList.remove("show");
+      document.getElementById("progress").style.width = "0%";
+    }
+  </script>
+</body>
+</html>
